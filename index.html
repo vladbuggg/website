@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vladyslav Mikytiv — software verification &amp; distributed systems</title>
+<meta name="description" content="Vladyslav Mikytiv — researcher in software verification, runtime verification, and distributed systems. Erlang, TLA+, and tools that help developers write safer code.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Vladyslav Mikytiv">
+<meta property="og:description" content="Researcher in software verification, runtime verification, and distributed systems. Erlang, TLA+, and tools that help developers write safer code.">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#16161f" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f4f9" media="(prefers-color-scheme: light)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='6' y='78' font-size='78' font-family='monospace' fill='%237aa2f7'%3E%E2%9D%AF%3C/text%3E%3C/svg%3E">
+<style>
+/* ============================================================
+   "THE SHELL SESSION" — enhanced.
+   The homepage reads as a scrollback of executed commands;
+   a real prompt at the bottom actually works.
+   ============================================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg: #16161f;
+    --panel: #1b1b26;
+    --text: #c3c9e3;
+    --muted: #5d6485;
+    --highlight: #e8ecfb;
+    --line: #292a3d;
+    --accent: #7aa2f7;         /* prompt blue */
+    --accent-dim: rgba(122, 162, 247, 0.12);
+    --ok: #9ece6a;             /* user@host green */
+    --warn: #e0af68;
+    --violet: #bb9af7;
+    --code-bg: #1e1f2e;
+}
+[data-theme="light"] {
+    --bg: #f4f4f9;
+    --panel: #ffffff;
+    --text: #3a3f58;
+    --muted: #8a8fa8;
+    --highlight: #14151f;
+    --line: #dcdde8;
+    --accent: #2e5cc5;
+    --accent-dim: rgba(46, 92, 197, 0.08);
+    --ok: #4a7a1e;
+    --warn: #9a6a1a;
+    --violet: #7847bd;
+    --code-bg: #ebebf2;
+}
+
+html { scroll-behavior: smooth; }
+body {
+    font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14.5px;
+    line-height: 1.7;
+    min-height: 100vh;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+::selection { background: var(--accent); color: #fff; }
+
+/* themed scrollbars */
+* { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+::-webkit-scrollbar-track { background: transparent; }
+
+a { color: var(--text); text-decoration: none; border-bottom: 1px solid var(--line); transition: color 0.15s, border-color 0.15s; }
+a:hover { color: var(--accent); border-color: var(--accent); }
+
+.container { max-width: 720px; margin: 0 auto; padding: 2.5rem 1.5rem 7rem; position: relative; z-index: 1; }
+
+/* ---------- background animation canvas ---------- */
+#bgCanvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* ---------- identity card (cat summary.md output) ---------- */
+header.idcard {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;      /* photo height = text block height */
+    gap: 2.25rem;
+    margin-bottom: 0.5rem;
+}
+.id-info { flex: 1; min-width: 0; }
+.id-lines {
+    list-style: none;
+    margin-top: 1.15rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 2.0;
+}
+.id-lines .sep { color: var(--accent); margin-right: 0.5rem; }
+.id-lines a { color: var(--muted); border-bottom-color: transparent; }
+.id-lines a:hover { color: var(--accent); }
+.portrait-box {
+    height: 220px;             /* fallback; JS matches it to the text column */
+    aspect-ratio: 3 / 4;       /* width follows from the height */
+    flex-shrink: 0;
+    position: relative;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--panel);
+    transition: border-color 0.2s ease;
+}
+.portrait-box:hover { border-color: var(--accent); }
+.portrait {
+    position: absolute;
+    inset: 4px;                /* the 4px frame */
+    width: calc(100% - 8px);
+    height: calc(100% - 8px);
+    object-fit: cover;
+    border-radius: 2px;
+    filter: saturate(0.85);
+    transition: filter 0.2s ease;
+}
+.portrait-box:hover .portrait { filter: saturate(1); }
+@media (max-width: 600px) {
+    header.idcard { flex-direction: column-reverse; gap: 1.4rem; }
+    .portrait-box { align-self: center; height: 227px !important; }
+}
+
+/* ---------- publications ---------- */
+.pub-list { list-style: none; counter-reset: pub; }
+.pub-row {
+    padding: 0.75rem 0.6rem;
+    margin: 0 -0.6rem;
+    border-bottom: 1px dashed var(--line);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    display: flex;
+    gap: 0.75rem;
+    transition: background 0.15s;
+}
+.pub-row:hover { background: var(--accent-dim); }
+.pub-idx { color: var(--muted); font-size: 0.72rem; flex-shrink: 0; padding-top: 0.15rem; }
+.pub-main { min-width: 0; }
+.pub-title { color: var(--highlight); border-bottom: none; }
+a.pub-title:hover { color: var(--accent); }
+.pub-meta { font-size: 0.76rem; color: var(--muted); margin-top: 0.15rem; }
+.pub-meta .venue { color: var(--accent); font-style: italic; }
+.pub-links { margin-top: 0.3rem; }
+.pub-links a { font-size: 0.7rem; color: var(--accent); border-bottom: none; margin-right: 0.75rem; }
+.pub-links a:hover { text-decoration: underline; }
+
+/* ---------- reading progress (articles only) ---------- */
+#progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    width: 0;
+    background: var(--accent);
+    z-index: 20;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+#progress.on { opacity: 1; }
+
+/* ---------- command line pieces ---------- */
+.cmd {
+    font-size: 0.86rem;
+    margin: 2.6rem 0 1rem;
+    user-select: none;
+}
+.cmd:first-of-type { margin-top: 0; }
+.cmd .u { color: var(--ok); }
+.cmd .p { color: var(--muted); }
+.cmd .c { color: var(--highlight); }
+.cmd .arg { color: var(--accent); }
+
+.out { margin-left: 0; }
+
+.cursor {
+    display: inline-block;
+    width: 0.55em;
+    height: 1.05em;
+    background: var(--accent);
+    vertical-align: text-bottom;
+    animation: blink 1.1s step-end infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ---------- header block ---------- */
+header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.5rem; }
+h1.name {
+    font-size: 1.45rem;
+    font-weight: 500;
+    color: var(--highlight);
+    letter-spacing: 0.02em;
+    position: relative;
+    display: inline-block;
+    cursor: default;
+    min-height: 1.4em;
+}
+/* glitch on hover — the v1 effect */
+h1.name::before, h1.name::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0;
+    pointer-events: none;
+}
+h1.name:hover::before { animation: glitch-1 0.3s both; color: var(--accent); z-index: -1; }
+h1.name:hover::after  { animation: glitch-2 0.3s both; color: var(--violet); z-index: -2; }
+@keyframes glitch-1 {
+    0%,100% { transform: translate(0); opacity: 0; }
+    20%,80% { transform: translate(-2px, 2px); opacity: 0.65; }
+    40%,60% { transform: translate(-2px,-2px); opacity: 0.65; }
+}
+@keyframes glitch-2 {
+    0%,100% { transform: translate(0); opacity: 0; }
+    20%,80% { transform: translate(2px,-2px); opacity: 0.65; }
+    40%,60% { transform: translate(2px, 2px); opacity: 0.65; }
+}
+.tagline { font-size: 0.84rem; color: var(--muted); margin-top: 0.2rem; min-height: 1.4em; }
+.theme-toggle {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 0.74rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+.theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+nav {
+    display: flex;
+    gap: 1.6rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 1.5rem 0 0;
+    padding: 0.65rem 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+}
+nav .theme-toggle { margin-left: auto; padding: 0.25rem 0.6rem; }
+nav a { font-size: 0.78rem; color: var(--muted); border-bottom: none; letter-spacing: 0.06em; }
+nav a::before { content: '$ '; color: var(--accent); opacity: 0; transition: opacity 0.15s; }
+nav a:hover, nav a.active { color: var(--highlight); }
+nav a:hover::before, nav a.active::before { opacity: 1; }
+
+/* ---------- content ---------- */
+section { margin: 0; }
+.bio { font-size: 0.87rem; max-width: 68ch; margin-bottom: 1rem; }
+.bio strong { color: var(--highlight); font-weight: 500; }
+
+/* route transitions */
+.page { animation: pagefade 0.25s ease; }
+@keyframes pagefade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* experience */
+.experience-item { margin-bottom: 1.8rem; padding-left: 1rem; border-left: 1px solid var(--line); transition: border-color 0.15s; }
+.experience-item:hover { border-left-color: var(--accent); }
+.item-header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; }
+.item-title { font-size: 0.89rem; color: var(--highlight); }
+.item-date { font-size: 0.71rem; color: var(--muted); }
+.item-subtitle { font-size: 0.77rem; color: var(--accent); }
+.item-description { font-size: 0.82rem; margin-top: 0.45rem; opacity: 0.88; }
+
+/* projects: ls -la output rows */
+.proj {
+    display: flex;
+    gap: 1.1rem;
+    align-items: baseline;
+    padding: 0.75rem 0.6rem;
+    margin: 0 -0.6rem;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text);
+    border-bottom: 1px dashed var(--line);
+    transition: background 0.15s;
+}
+.proj:hover { background: var(--accent-dim); }
+.proj-perm { font-size: 0.68rem; color: var(--muted); flex-shrink: 0; display: none; }
+@media (min-width: 640px) { .proj-perm { display: block; } }
+.proj-main { flex: 1; min-width: 0; }
+.proj-title { font-size: 0.9rem; color: var(--accent); }
+.proj-title::after { content: '/'; color: var(--muted); }
+.proj-desc { font-size: 0.8rem; color: var(--muted); margin-top: 0.15rem; }
+.proj-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; }
+.proj-date { font-size: 0.7rem; color: var(--muted); flex-shrink: 0; }
+
+.tag {
+    font-size: 0.65rem;
+    padding: 0.13rem 0.45rem;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-radius: 3px;
+}
+
+/* blog */
+.post-list { list-style: none; }
+.post-row {
+    display: flex;
+    gap: 1.25rem;
+    align-items: baseline;
+    padding: 0.8rem 0.6rem;
+    margin: 0 -0.6rem;
+    border-bottom: 1px dashed var(--line);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.post-row:hover { background: var(--accent-dim); }
+.post-row:hover .post-row-title { color: var(--accent); }
+.post-row-date { font-size: 0.7rem; color: var(--muted); min-width: 82px; flex-shrink: 0; }
+.post-row-main { flex: 1; min-width: 0; }
+.post-row-title { font-size: 0.89rem; color: var(--highlight); transition: color 0.15s; }
+.post-row-summary { font-size: 0.79rem; color: var(--muted); margin-top: 0.15rem; }
+.post-row-tags { margin-top: 0.5rem; display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.blog-filter { display: flex; gap: 0.45rem; flex-wrap: wrap; margin: 0 0 1.3rem; }
+.blog-filter .tag { cursor: pointer; border: 1px solid transparent; }
+.blog-filter .tag:hover { border-color: var(--accent); }
+.blog-filter .tag.on { background: var(--accent); color: var(--bg); }
+
+/* article */
+.back-link { font-size: 0.76rem; color: var(--muted); border-bottom: none; display: inline-block; margin-bottom: 1.75rem; }
+.back-link::before { content: 'cd .. '; color: var(--accent); }
+.back-link:hover { color: var(--accent); }
+.detail-title { font-size: 1.45rem; color: var(--highlight); font-weight: 500; line-height: 1.35; margin-bottom: 0.5rem; }
+.detail-meta { font-size: 0.74rem; color: var(--muted); }
+.detail-meta .tag { margin-left: 0.35rem; }
+.detail-header { margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--line); }
+
+.article { font-size: 0.88rem; line-height: 1.85; }
+.article p { margin-bottom: 1.35rem; }
+.article h2 { font-size: 1.05rem; color: var(--highlight); font-weight: 500; margin: 2.1rem 0 0.9rem; }
+.article h2::before { content: '## '; color: var(--accent); opacity: 0.75; }
+.article h3 { font-size: 0.94rem; color: var(--highlight); font-weight: 500; margin: 1.6rem 0 0.75rem; }
+.article ul, .article ol { margin: 0 0 1.35rem 1.4rem; }
+.article li { margin-bottom: 0.35rem; }
+.article blockquote { border-left: 2px solid var(--accent); padding: 0.2rem 0 0.2rem 1rem; margin-bottom: 1.35rem; color: var(--muted); font-style: italic; }
+.article code { background: var(--code-bg); border: 1px solid var(--line); padding: 0.08rem 0.32rem; border-radius: 3px; font-size: 0.85em; }
+.article pre {
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--accent);
+    padding: 1rem 1.15rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin-bottom: 1.35rem;
+    line-height: 1.55;
+    position: relative;
+}
+.article pre code { background: none; border: none; padding: 0; font-size: 0.79rem; }
+.article hr { border: none; border-top: 1px solid var(--line); margin: 1.9rem 0; }
+.article a { color: var(--accent); border-bottom-color: var(--accent-dim); }
+
+/* syntax highlighting tokens */
+.tok-k { color: var(--violet); }
+.tok-s { color: var(--ok); }
+.tok-c { color: var(--muted); font-style: italic; }
+.tok-n { color: var(--warn); }
+.tok-v { color: var(--highlight); }
+
+/* copy button on code blocks */
+.copy-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 0.64rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 3px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s, border-color 0.15s;
+}
+.article pre:hover .copy-btn { opacity: 1; }
+.copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+.copy-btn.done { color: var(--ok); border-color: var(--ok); opacity: 1; }
+
+/* prev/next post navigation */
+.post-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 3rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.8rem;
+}
+.post-nav a { border-bottom: none; color: var(--muted); max-width: 46%; }
+.post-nav a:hover { color: var(--accent); }
+.post-nav .lbl { display: block; font-size: 0.66rem; color: var(--muted); opacity: 0.8; }
+.post-nav .next { text-align: right; margin-left: auto; }
+
+/* contact */
+.contact-list { list-style: none; font-size: 0.84rem; }
+.contact-list li { display: flex; gap: 1rem; align-items: baseline; margin-bottom: 0.6rem; }
+.contact-label { color: var(--muted); min-width: 80px; font-size: 0.74rem; }
+
+/* ============================================================
+   LIVE PROMPT — fixed at the bottom, actually executes commands
+   ============================================================ */
+.promptbar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: var(--panel);
+    border-top: 1px solid var(--line);
+    z-index: 10;
+    cursor: text;
+}
+.promptbar-inner { max-width: 720px; margin: 0 auto; padding: 0.6rem 1.5rem 0.8rem; }
+#cmdlog { font-size: 0.78rem; color: var(--muted); max-height: 9.5em; overflow-y: auto; }
+#cmdlog .echo .u { color: var(--ok); }
+#cmdlog .echo .p { color: var(--muted); }
+#cmdlog .err { color: var(--warn); }
+#cmdlog pre { font-family: inherit; line-height: 1.5; }
+#cmdlog .nf-a { color: var(--accent); }
+#cmdlog .nf-k { color: var(--ok); }
+.prompt-row { display: flex; align-items: baseline; gap: 0.5rem; font-size: 0.86rem; margin-top: 0.25rem; }
+.prompt-row .u { color: var(--ok); }
+.prompt-row .p { color: var(--muted); }
+#cmdInput {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--highlight);
+    font-family: inherit;
+    font-size: 0.86rem;
+    caret-color: var(--accent);
+    min-width: 0;
+}
+.prompt-hint { font-size: 0.66rem; color: var(--muted); opacity: 0.7; margin-top: 0.15rem; }
+.prompt-hint kbd { color: var(--accent); font-family: inherit; }
+
+.hidden { display: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+}
+@media (max-width: 600px) {
+    .container { padding: 1.75rem 1.15rem 7.5rem; }
+    .post-row { flex-direction: column; gap: 0.15rem; }
+    .detail-title { font-size: 1.3rem; }
+    .prompt-hint { display: none; }
+}
+@media print {
+    .promptbar, #progress, .theme-toggle, #bgCanvas { display: none !important; }
+    body { background: #fff; color: #000; }
+}
+</style>
+</head>
+<body>
+<canvas id="bgCanvas" aria-hidden="true"></canvas>
+<div id="progress" aria-hidden="true"></div>
+<div class="container">
+
+    <div id="siteHeader">
+        <div class="cmd"><span class="u">vladys@bug</span><span class="p">:~$</span> <span class="c" id="firstCmd"></span></div>
+        <header class="out idcard">
+        <div class="id-info">
+            <h1 class="name" id="nameEl" data-text="Vladyslav Mikytiv"></h1>
+            <p class="tagline" id="taglineEl"></p>
+            <!-- EDIT ME: your affiliation / location / contact lines -->
+            <ul class="id-lines">
+                <li><span class="sep">-</span>NOVA LINCS · NOVA School of Science and Technology</li>
+                <li><span class="sep">-</span>RPTU Kaiserslautern-Landau</li>
+                <li><span class="sep">-</span>Caparica, Portugal</li>
+                <!-- EDIT ME: email parts (kept separate so scrapers can't read the address) -->
+                <li><span class="sep">-</span><a class="email-link" data-user="vladbuggg" data-domain="gmail.com"></a></li>
+            </ul>
+        </div>
+        <!-- EDIT ME: put a portrait photo at assets/me.jpg (roughly 3:4,
+             e.g. 600×800). If the file is missing the image hides itself. -->
+        <div class="portrait-box">
+            <img class="portrait" src="assets/me.jpg" alt="Vladyslav Mikytiv" onerror="this.parentElement.style.display='none'">
+        </div>
+        </header>
+    </div>
+
+    <nav id="mainNav">
+        <a href="#/" data-route="home">home</a>
+        <a href="#/projects" data-route="projects">projects</a>
+        <a href="#/blog" data-route="blog">blog</a>
+        <a href="#/publications" data-route="publications">publications</a>
+        <!-- EDIT ME -->
+        <a href="https://github.com/yourusername" target="_blank" rel="noopener">github ↗</a>
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"><span id="themeIcon">theme --light</span></button>
+    </nav>
+
+    <!-- ========================= HOME ========================= -->
+    <div id="page-home" class="page">
+        <div class="cmd"><span class="u">vlad@bug</span><span class="p">:~$</span> <span class="c">cat</span> <span class="arg">about.md</span></div>
+        <section class="out">
+            <p class="bio">
+                I am a PhD student and researcher with interests in <strong>software verification</strong>,
+                <strong>runtime verification</strong>, and <strong>distributed systems</strong>. My work focuses on
+                developing techniques and tools for specifying runtime properties and automatically checking that
+                systems adhere to them. I hold a Bachelor's and Master's degree in Computer Science from NOVA School
+                of Science and Technology and have experience as a graduate research assistant in software verification.
+            </p>
+            <p class="bio">
+                I am currently focusing on developing distributed systems
+                using <strong>Erlang</strong> and <strong>Elixir</strong>. I like learning new languages and paradigms,
+                and I enjoy building tools that help developers write better and safer code.
+            </p>
+        </section>
+
+        <div class="cmd"><span class="u">vlad@bug</span><span class="p">:~$</span> <span class="c">ls -la</span> <span class="arg">projects/</span></div>
+        <section class="out"><div id="homeProjects"></div></section>
+
+        <div class="cmd"><span class="u">vlad@bug</span><span class="p">:~$</span> <span class="c">cat</span> <span class="arg">publications.bib</span></div>
+        <section class="out"><ul class="pub-list" id="homePubs"></ul></section>
+
+        <div class="cmd"><span class="u">vlad@bug</span><span class="p">:~$</span> <span class="c">tail -n 3</span> <span class="arg">blog/</span></div>
+        <section class="out"><ul class="post-list" id="homePosts"></ul></section>
+
+        <div class="cmd"><span class="u">vlad@bug</span><span class="p">:~$</span> <span class="c">cat</span> <span class="arg">experience.log</span></div>
+        <section class="out" id="experienceList"></section>
+
+        <div class="cmd"><span class="u">vlad@bug</span><span class="p">:~$</span> <span class="c">cat</span> <span class="arg">contact</span></div>
+        <section class="out">
+            <ul class="contact-list">
+                <!-- EDIT ME: email parts are separate to defeat scrapers -->
+                <li><span class="contact-label">email:</span><a class="email-link" data-user="vladbuggg" data-domain="gmail.com"></a></li>
+                <li><span class="contact-label">github:</span><a href="https://github.com/yourusername" target="_blank" rel="noopener">@vladbuggg</a></li>
+                <li><span class="contact-label">linkedin:</span><a href="https://linkedin.com/in/yourprofile" target="_blank" rel="noopener">/in/</a></li>
+            </ul>
+        </section>
+
+    </div>
+
+    <!-- ========================= PROJECTS ========================= -->
+    <div id="page-projects" class="page hidden">
+        <div class="cmd"><span class="u">vlad@bug</span><span class="p">:~$</span> <span class="c">ls -la</span> <span class="arg">projects/</span></div>
+        <section class="out"><div id="allProjects"></div></section>
+    </div>
+
+    <!-- ========================= PROJECT DETAIL ========================= -->
+    <div id="page-project-detail" class="page hidden">
+        <a href="#/projects" class="back-link">projects</a>
+        <div id="projectDetailContent"></div>
+    </div>
+
+    <!-- ========================= PUBLICATIONS ========================= -->
+    <div id="page-publications" class="page hidden">
+        <div class="cmd"><span class="u">vlad@bug</span><span class="p">:~$</span> <span class="c">cat</span> <span class="arg">publications.bib</span></div>
+        <section class="out"><ul class="pub-list" id="allPubs"></ul></section>
+    </div>
+
+    <!-- ========================= BLOG ========================= -->
+    <div id="page-blog" class="page hidden">
+        <div class="cmd"><span class="u">vlad@bug</span><span class="p">:~$</span> <span class="c">ls -t</span> <span class="arg">blog/</span></div>
+        <section class="out">
+            <div class="blog-filter" id="blogFilter"></div>
+            <ul class="post-list" id="allPosts"></ul>
+        </section>
+    </div>
+
+    <!-- ========================= BLOG DETAIL ========================= -->
+    <div id="page-blog-detail" class="page hidden">
+        <a href="#/blog" class="back-link">blog</a>
+        <div id="blogDetailContent"></div>
+        <div class="post-nav" id="postNav"></div>
+    </div>
+</div>
+
+<!-- live prompt -->
+<div class="promptbar" onclick="document.getElementById('cmdInput').focus()">
+    <div class="promptbar-inner">
+        <div id="cmdlog" aria-live="polite"></div>
+        <div class="prompt-row">
+            <span><span class="u">vlad@bug</span><span class="p" id="promptPath">:~$</span></span>
+            <input id="cmdInput" type="text" autocomplete="off" spellcheck="false" aria-label="Command input" placeholder="">
+        </div>
+        <div class="prompt-hint">try <kbd>help</kbd> · <kbd>open otplus2</kbd> · <kbd>bg rain</kbd> · <kbd>neofetch</kbd> — <kbd>tab</kbd> completes · press <kbd>/</kbd> anywhere to jump here</div>
+    </div>
+</div>
+
+<script>
+/* ############################################################
+   CONTENT — GENERATED BY build.py FROM THE content/ FOLDER.
+   Do not edit the data between the markers by hand; edit the
+   Markdown files in content/posts, content/projects, and
+   content/experience, then run:  python3 build.py
+   ############################################################ */
+
+/* ===== GENERATED CONTENT START ===== */
+const PROJECTS = [
+  {
+    "id": "template",
+    "title": "Title of the Project",
+    "date": "2024 — 2025",
+    "featured": true,
+    "tags": [
+      "Tag1",
+      "Tag2",
+      "Tag3"
+    ],
+    "summary": "A summary of the thing",
+    "body": "\nText\n\n## Highlights\n\n- This is just usual MD file notation\n"
+  }
+];
+const POSTS = [
+  {
+    "slug": "why-translate-erlang-to-tla",
+    "title": "Blog Template",
+    "date": "2026-07-01",
+    "tags": [
+      "tag1",
+      "tag2",
+      "tag3"
+    ],
+    "summary": "A summary about it",
+    "body": "\n## Inserting code\n\n```erlang\nhandle_call({withdraw, Amount}, _From, State)\n        when Amount =< State#state.balance ->\n    NewState = State#state{balance = State#state.balance - Amount},\n    {reply, ok, NewState};\n```\n"
+  },
+  {
+    "slug": "hello-world",
+    "title": "Hello, World",
+    "date": "2026-06-15",
+    "tags": [
+      "meta"
+    ],
+    "summary": "First entry. What this blog is for and what to expect here.",
+    "body": "\nEvery blog needs a `hello world`, so here is mine.\n\nI plan to write about formal verification, distributed systems, Erlang and\nTLA+, and the occasional detour into whatever I am learning at the moment.\nShort, technical, and honest about what did not work.\n\n> \"Writing is nature's way of letting you know how sloppy your thinking is.\"\n> — Leslie Lamport\n\n*(Sample post — replace with your own first entry.)*\n"
+  }
+];
+const EXPERIENCE = [
+  {
+    "title": "PhD Student",
+    "org": "NOVA School of Science and Technology & RPTU Kaiserslautern-Landau",
+    "date": "Sep 2026 - ???",
+    "body": "As the name says, I am a PhD student in the field of software verification :)"
+  },
+  {
+    "title": "Invited Researcher",
+    "org": "RPTU Kaiserslautern-Landau",
+    "date": "Mar 2026 — Jun 2026",
+    "body": "Worked on narrowing the gap between abstract specifications and implementations: automatically translating Erlang/OTP-compliant code into TLA+ specifications, then comparing traces produced by the Erlang system against the TLC model checker to assess the correctness of the translation."
+  },
+  {
+    "title": "Invited Assistant",
+    "org": "NOVA School of Science and Technology",
+    "date": "Dec 2025 — present",
+    "body": "Invited Assistant for \"Introduction to Programming\", teaching programming fundamentals in Python: lectures, grading, and lab supervision."
+  },
+  {
+    "title": "Graduate Student Researcher",
+    "org": "NOVA LINCS",
+    "date": "Jun 2023 — Dec 2025",
+    "body": "Developed a runtime framework to verify and monitor Erlang/OTP-compliant systems, composing a formal logic for specifying system properties with automatically generated monitors. Also worked on micro-service testing: a graph traversal algorithm generating REST API call sequences between services, and a compiler from OpenAPI specifications to TLA+ models."
+  },
+  {
+    "title": "Teaching Assistant",
+    "org": "NOVA School of Science and Technology",
+    "date": "Mar 2024 — Nov 2025",
+    "body": "TA for \"Introduction to Programming (Java)\", \"Theory of Computation\", \"Design and Analysis of Algorithms\", and \"Artificial Intelligence\"."
+  }
+];
+const PUBLICATIONS = [
+  {
+    "title": "\"In Perfect Harmony: Orchestrating Causality in Actor-Based Systems\"",
+    "authors": "V. Mikytiv, B. Toninho, and C.Ferreira",
+    "venue": "\"ICST : Conference on Software Testing, Verification and Validation\"",
+    "date": "2026",
+    "url": "https://arxiv.org/abs/2603.17909",
+    "note": ""
+  },
+  {
+    "title": "\"WALTZ: Formalizing the Dance Between Actors and Messages\"",
+    "authors": "V. Mikytiv, B. Toninho, C. Ferreira",
+    "venue": "INForum",
+    "date": "2025",
+    "url": "",
+    "note": ""
+  }
+];
+/* ===== GENERATED CONTENT END ===== */
+
+/* ############################################################
+   ENGINE — you should rarely need to edit below this line.
+   ############################################################ */
+
+/* ---------- escaping ---------- */
+function esc(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/* ---------- syntax highlighting ----------
+   Small regex tokenizer for erlang / tla / generic fences.
+   Operates on already-escaped text; all rule regexes must be
+   free of capturing groups. */
+const HL_RULES = {
+    erlang: [
+        [/%[^\n]*/, 'c'],
+        [/"(?:[^"\\\n]|\\.)*"/, 's'],
+        [/\b(?:case|of|end|fun|receive|when|if|after|begin|try|catch|throw|andalso|orelse|not|band|bor|bxor|div|rem)\b/, 'k'],
+        [/-(?:module|export|import|record|behaviour|behavior|define|include|include_lib|spec|type|opaque|callback)\b/, 'k'],
+        [/\b[A-Z_][A-Za-z0-9_]*\b/, 'v'],
+        [/\b\d+(?:\.\d+)?\b/, 'n']
+    ],
+    tla: [
+        [/\\\*[^\n]*/, 'c'],
+        [/"(?:[^"\\\n]|\\.)*"/, 's'],
+        [/\b(?:MODULE|EXTENDS|CONSTANTS?|VARIABLES?|ASSUME|THEOREM|LEMMA|INSTANCE|LOCAL|LET|IN|IF|THEN|ELSE|CASE|OTHER|CHOOSE|ENABLED|UNCHANGED|SUBSET|UNION|DOMAIN|EXCEPT|WITH|WF_|SF_|Init|Next|Spec|TRUE|FALSE)\b/, 'k'],
+        [/\b\d+\b/, 'n']
+    ],
+    generic: [
+        [/(?:\/\/|#)[^\n]*/, 'c'],
+        [/"(?:[^"\\\n]|\\.)*"/, 's'],
+        [/'(?:[^'\\\n]|\\.)*'/, 's'],
+        [/\b(?:function|return|const|let|var|if|else|for|while|def|class|import|from|new|true|false|null|nil|end|do|then|match|fn|pub|mut|struct|enum|impl|use)\b/, 'k'],
+        [/\b\d+(?:\.\d+)?\b/, 'n']
+    ]
+};
+function highlightCode(escaped, lang) {
+    const key = /^(erlang|elixir)$/.test(lang) ? 'erlang'
+              : /^(tla\+?|tlaplus)$/.test(lang) ? 'tla'
+              : lang ? 'generic' : null;
+    if (!key) return escaped;
+    const rules = HL_RULES[key];
+    const master = new RegExp(rules.map(r => '(' + r[0].source + ')').join('|'), 'g');
+    let out = '', last = 0, m;
+    while ((m = master.exec(escaped)) !== null) {
+        out += escaped.slice(last, m.index);
+        let cls = '';
+        for (let i = 0; i < rules.length; i++) {
+            if (m[i + 1] !== undefined) { cls = rules[i][1]; break; }
+        }
+        out += '<span class="tok-' + cls + '">' + m[0] + '</span>';
+        last = m.index + m[0].length;
+    }
+    return out + escaped.slice(last);
+}
+
+/* ---------- markdown ---------- */
+function inlineMd(s) {
+    return s
+        .replace(/`([^`]+)`/g, (_, c) => '<code>' + c + '</code>')
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|#[^)\s]*|mailto:[^)\s]+)\)/g,
+                 '<a href="$2" target="_blank" rel="noopener">$1</a>');
+}
+function renderMarkdown(md) {
+    const lines = esc(md.trim()).split('\n');
+    let html = '', i = 0;
+    while (i < lines.length) {
+        let line = lines[i];
+        if (/^```/.test(line)) {
+            const lang = line.replace(/^```/, '').trim().toLowerCase();
+            let code = []; i++;
+            while (i < lines.length && !/^```/.test(lines[i])) { code.push(lines[i]); i++; }
+            i++;
+            html += '<pre><code>' + highlightCode(code.join('\n'), lang) + '</code></pre>';
+            continue;
+        }
+        if (/^###\s+/.test(line)) { html += '<h3>' + inlineMd(line.replace(/^###\s+/, '')) + '</h3>'; i++; continue; }
+        if (/^##\s+/.test(line))  { html += '<h2>' + inlineMd(line.replace(/^##\s+/, ''))  + '</h2>'; i++; continue; }
+        if (/^---\s*$/.test(line)) { html += '<hr>'; i++; continue; }
+        if (/^&gt;\s?/.test(line)) {
+            let q = [];
+            while (i < lines.length && /^&gt;\s?/.test(lines[i])) { q.push(lines[i].replace(/^&gt;\s?/, '')); i++; }
+            html += '<blockquote><p>' + inlineMd(q.join(' ')) + '</p></blockquote>';
+            continue;
+        }
+        if (/^[-*]\s+/.test(line)) {
+            let items = [];
+            while (i < lines.length && /^[-*]\s+/.test(lines[i])) { items.push(lines[i].replace(/^[-*]\s+/, '')); i++; }
+            html += '<ul>' + items.map(it => '<li>' + inlineMd(it) + '</li>').join('') + '</ul>';
+            continue;
+        }
+        if (/^\d+\.\s+/.test(line)) {
+            let items = [];
+            while (i < lines.length && /^\d+\.\s+/.test(lines[i])) { items.push(lines[i].replace(/^\d+\.\s+/, '')); i++; }
+            html += '<ol>' + items.map(it => '<li>' + inlineMd(it) + '</li>').join('') + '</ol>';
+            continue;
+        }
+        if (/^\s*$/.test(line)) { i++; continue; }
+        let para = [];
+        while (i < lines.length && !/^\s*$/.test(lines[i]) &&
+               !/^(```|##|###|---|[-*]\s|\d+\.\s|&gt;)/.test(lines[i])) {
+            para.push(lines[i]); i++;
+        }
+        html += '<p>' + inlineMd(para.join(' ')) + '</p>';
+    }
+    return html;
+}
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function fmtDate(iso) {
+    const d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: '2-digit' });
+}
+function readTime(md) {
+    const words = md.trim().split(/\s+/).length;
+    return Math.max(1, Math.round(words / 200)) + ' min read';
+}
+function tagHtml(tags) {
+    return tags.map(t => '<span class="tag">' + esc(t) + '</span>').join('');
+}
+function sortedPosts() {
+    return [...POSTS].sort((a, b) => b.date.localeCompare(a.date));
+}
+
+/* ---------- copy buttons on code blocks ---------- */
+function addCopyButtons(rootEl) {
+    rootEl.querySelectorAll('pre').forEach(pre => {
+        const btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.textContent = 'copy';
+        btn.addEventListener('click', () => {
+            const text = pre.querySelector('code').innerText;
+            const done = () => {
+                btn.textContent = 'copied ✓';
+                btn.classList.add('done');
+                setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('done'); }, 1600);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(done).catch(done);
+            } else { done(); }
+        });
+        pre.appendChild(btn);
+    });
+}
+
+/* ---------- render: projects ---------- */
+function projRow(p) {
+    return `<a class="proj" href="#/projects/${p.id}">
+        <span class="proj-perm">drwxr-xr-x</span>
+        <span class="proj-main">
+            <span class="proj-title">${esc(p.title)}</span>
+            <div class="proj-desc">${esc(p.summary)}</div>
+            <div class="proj-tags">${tagHtml(p.tags)}</div>
+        </span>
+        <span class="proj-date">${esc(p.date)}</span>
+    </a>`;
+}
+function renderProjects() {
+    $('allProjects').innerHTML = PROJECTS.map(projRow).join('');
+    $('homeProjects').innerHTML = PROJECTS.filter(p => p.featured).slice(0, 4).map(projRow).join('');
+}
+
+/* ---------- render: experience ---------- */
+function renderExperience() {
+    $('experienceList').innerHTML = EXPERIENCE.map(e => {
+        const paras = e.body.split(/\n\s*\n/).map(par =>
+            '<p class="item-description">' + inlineMd(esc(par.trim())) + '</p>').join('');
+        return `<div class="experience-item">
+            <div class="item-header"><span class="item-title">${esc(e.title)}</span><span class="item-date">${esc(e.date)}</span></div>
+            <p class="item-subtitle">${esc(e.org)}</p>
+            ${paras}
+        </div>`;
+    }).join('');
+}
+
+/* ---------- render: publications ---------- */
+function pubRow(p, i) {
+    const title = p.url
+        ? `<a class="pub-title" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)} ↗</a>`
+        : `<span class="pub-title">${esc(p.title)}</span>`;
+    const note = p.note ? `<div class="pub-links"><span style="color:var(--muted);font-size:0.7rem;">${esc(p.note)}</span></div>` : '';
+    return `<li class="pub-row">
+        <span class="pub-idx">[${i + 1}]</span>
+        <div class="pub-main">
+            ${title}
+            <div class="pub-meta">${esc(p.authors)} · <span class="venue">${esc(p.venue)}</span> · ${esc(p.date)}</div>
+            ${note}
+        </div>
+    </li>`;
+}
+function renderPublications() {
+    $('allPubs').innerHTML = PUBLICATIONS.map(pubRow).join('');
+    $('homePubs').innerHTML = PUBLICATIONS.slice(0, 3).map(pubRow).join('');
+}
+
+/* ---------- render: blog ---------- */
+let activeTag = null;
+function postRow(p) {
+    return `<li class="post-row" onclick="location.hash='#/blog/${p.slug}'">
+        <span class="post-row-date">${fmtDate(p.date)}</span>
+        <div class="post-row-main">
+            <div class="post-row-title">${esc(p.title)}</div>
+            <div class="post-row-summary">${esc(p.summary)}</div>
+            <div class="post-row-tags">${tagHtml(p.tags)}</div>
+        </div>
+    </li>`;
+}
+function renderBlog() {
+    const sorted = sortedPosts();
+    const shown = activeTag ? sorted.filter(p => p.tags.includes(activeTag)) : sorted;
+    $('allPosts').innerHTML = shown.map(postRow).join('') ||
+        '<li style="color:var(--muted);font-size:0.82rem;padding:0.8rem 0;">no posts with this tag yet.</li>';
+    $('homePosts').innerHTML = sorted.slice(0, 3).map(postRow).join('');
+    const tags = [...new Set(POSTS.flatMap(p => p.tags))].sort();
+    $('blogFilter').innerHTML = tags.map(t =>
+        `<span class="tag ${activeTag === t ? 'on' : ''}" onclick="filterTag('${esc(t)}')">${esc(t)}</span>`
+    ).join('');
+}
+function filterTag(t) {
+    activeTag = (activeTag === t) ? null : t;
+    renderBlog();
+}
+
+/* ---------- shell state: a real working directory ----------
+   The prompt tracks a cwd ('~', '~/projects', '~/blog',
+   '~/publications'). `cd` moves (and the page follows);
+   `ls` only lists; relative names resolve against the cwd.
+   Navigating with the mouse keeps the cwd in sync too. */
+const SHELL_DIRS = ['projects', 'blog', 'publications'];
+let cwd = '~';
+function updatePrompt() {
+    const el = $('promptPath');
+    if (el) el.textContent = ':' + cwd + '$';
+}
+function setCwd(d) { cwd = d; updatePrompt(); }
+function hashForDir(d) { return d === '~' ? '#/' : '#/' + d.slice(2); }
+function dirContents(d) {
+    if (d === '~') return ['README.md', 'summary.md', 'about.md', 'contact', 'projects/', 'blog/', 'publications/'];
+    if (d === '~/projects') return PROJECTS.map(p => p.id + '.md');
+    if (d === '~/blog') return sortedPosts().map(p => p.slug + '.md');
+    if (d === '~/publications') return PUBLICATIONS.map((p, i) => '[' + (i + 1) + '] ' + p.title + ' (' + p.date + ')');
+    return [];
+}
+function resolveDir(raw) {
+    if (!raw) return cwd;                                  // bare `ls` / `cd`
+    let a = raw.trim().replace(/\/+$/, '');
+    if (a === '' || a === '~' || a === '/' || a === 'home' || a === '~/') return '~';
+    a = a.replace(/^~\//, '').replace(/^\//, '');
+    if (a === '.') return cwd;
+    if (a === '..') return '~';                            // tree is one level deep
+    if (SHELL_DIRS.includes(a)) return '~/' + a;
+    return null;
+}
+function resolveFile(raw) {
+    let a = raw.trim().replace(/\/+$/, '');
+    const absolute = /^(~\/|\/)/.test(a);
+    a = a.replace(/^~\//, '').replace(/^\//, '');
+    const seg = a.split('/');
+    let scope = null, fname = a;
+    if (seg.length === 2 && SHELL_DIRS.includes(seg[0])) { scope = seg[0]; fname = seg[1]; }
+    else if (seg.length > 1) return null;
+    else if (absolute) scope = '';                         // ~/x → home only
+    else if (cwd !== '~') scope = cwd.slice(2);            // relative to cwd
+    fname = fname.replace(/\.md$/, '');
+    if (!scope || scope === 'projects') {
+        const p = PROJECTS.find(x => x.id === fname);
+        if (p) return { kind: 'project', obj: p };
+    }
+    if (!scope || scope === 'blog') {
+        const p = POSTS.find(x => x.slug === fname);
+        if (p) return { kind: 'post', obj: p };
+    }
+    if (scope === null || scope === '') {
+        if (fname === 'README' || fname === 'about' || fname === 'summary') return { kind: 'home' };
+        if (fname === 'contact') return { kind: 'contact' };
+    }
+    return null;
+}
+
+/* ---------- routing ---------- */
+const pages = ['home', 'projects', 'project-detail', 'blog', 'blog-detail', 'publications'];
+function show(page) {
+    $('siteHeader').classList.toggle('hidden', page !== 'home');
+    pages.forEach(p => {
+        const el = $('page-' + p);
+        const active = p === page;
+        el.classList.toggle('hidden', !active);
+        if (active && !reducedMotion()) {   /* replay fade */
+            el.style.animation = 'none';
+            void el.offsetHeight;
+            el.style.animation = '';
+        }
+    });
+    document.querySelectorAll('#mainNav a[data-route]').forEach(a => {
+        a.classList.toggle('active',
+            a.dataset.route === page ||
+            (page === 'project-detail' && a.dataset.route === 'projects') ||
+            (page === 'blog-detail' && a.dataset.route === 'blog'));
+    });
+    $('progress').classList.toggle('on', page === 'blog-detail' || page === 'project-detail');
+    window.scrollTo(0, 0);
+}
+function route() {
+    const hash = location.hash.replace(/^#/, '') || '/';
+    const parts = hash.split('/').filter(Boolean);
+
+    if (parts[0] === 'projects' && parts[1]) {
+        const p = PROJECTS.find(x => x.id === parts[1]);
+        if (!p) { location.hash = '#/projects'; return; }
+        $('projectDetailContent').innerHTML = `
+            <div class="detail-header">
+                <div class="detail-title">${esc(p.title)}</div>
+                <div class="detail-meta">${esc(p.date)} · ${tagHtml(p.tags)}</div>
+            </div>
+            <div class="article">${renderMarkdown(p.body)}</div>`;
+        addCopyButtons($('projectDetailContent'));
+        show('project-detail');
+        setCwd('~/projects');
+        document.title = p.title + ' — Vladyslav Mikytiv';
+    } else if (parts[0] === 'projects') {
+        show('projects');
+        setCwd('~/projects');
+        document.title = 'Projects — Vladyslav Mikytiv';
+    } else if (parts[0] === 'blog' && parts[1]) {
+        const sorted = sortedPosts();
+        const idx = sorted.findIndex(x => x.slug === parts[1]);
+        if (idx === -1) { location.hash = '#/blog'; return; }
+        const p = sorted[idx];
+        $('blogDetailContent').innerHTML = `
+            <div class="detail-header">
+                <div class="detail-title">${esc(p.title)}</div>
+                <div class="detail-meta">${fmtDate(p.date)} · ${readTime(p.body)} · ${tagHtml(p.tags)}</div>
+            </div>
+            <div class="article">${renderMarkdown(p.body)}</div>`;
+        addCopyButtons($('blogDetailContent'));
+        const newer = sorted[idx - 1], older = sorted[idx + 1];
+        $('postNav').innerHTML =
+            (older ? `<a href="#/blog/${older.slug}"><span class="lbl">← older</span>${esc(older.title)}</a>` : '<span></span>') +
+            (newer ? `<a class="next" href="#/blog/${newer.slug}"><span class="lbl">newer →</span>${esc(newer.title)}</a>` : '');
+        show('blog-detail');
+        setCwd('~/blog');
+        document.title = p.title + ' — Vladyslav Mikytiv';
+    } else if (parts[0] === 'publications') {
+        show('publications');
+        setCwd('~/publications');
+        document.title = 'Publications — Vladyslav Mikytiv';
+    } else if (parts[0] === 'blog') {
+        show('blog');
+        setCwd('~/blog');
+        document.title = 'Writing — Vladyslav Mikytiv';
+    } else {
+        show('home');
+        setCwd('~');
+        document.title = 'Vladyslav Mikytiv';
+    }
+}
+window.addEventListener('hashchange', route);
+
+/* ---------- reading progress ---------- */
+window.addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    $('progress').style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%';
+}, { passive: true });
+
+/* ============================================================
+   BACKGROUND ANIMATIONS — three presets, switchable from the
+   prompt:  bg nodes | rain | life | off
+   'nodes' (default): a living distributed system — processes
+   drifting in space, exchanging message pulses along links.
+   ============================================================ */
+const BG = (() => {
+    const canvas = $('bgCanvas');
+    const ctx = canvas.getContext('2d');
+    const MODES = ['nodes', 'rain', 'life'];
+    let mode = 'off', raf = null, timer = null, state = null, pal = {};
+
+    function palette() {
+        const css = getComputedStyle(document.documentElement);
+        pal = {
+            accent: css.getPropertyValue('--accent').trim(),
+            ok: css.getPropertyValue('--ok').trim(),
+            text: css.getPropertyValue('--muted').trim(),
+            bright: css.getPropertyValue('--text').trim(),
+            light: document.documentElement.getAttribute('data-theme') === 'light'
+        };
+    }
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        if (mode !== 'off') init();
+    }
+    window.addEventListener('resize', resize);
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stopLoop(); else if (mode !== 'off') startLoop();
+    });
+
+    /* ---- preset: nodes (distributed system) ---- */
+    function initNodes() {
+        const n = Math.max(14, Math.floor(canvas.width * canvas.height / 46000));
+        state = {
+            nodes: Array.from({ length: n }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 0.22,
+                vy: (Math.random() - 0.5) * 0.22,
+                r: 1.6 + Math.random() * 1.4
+            })),
+            pulses: [],
+            lastPulse: 0,
+            linkDist: Math.min(190, canvas.width / 5)
+        };
+    }
+    function drawNodes(t) {
+        const { nodes, pulses, linkDist } = state;
+        const base = pal.light ? 0.16 : 0.22;
+        for (const nd of nodes) {
+            nd.x += nd.vx; nd.y += nd.vy;
+            if (nd.x < -20) nd.x = canvas.width + 20; if (nd.x > canvas.width + 20) nd.x = -20;
+            if (nd.y < -20) nd.y = canvas.height + 20; if (nd.y > canvas.height + 20) nd.y = -20;
+        }
+        // links
+        for (let i = 0; i < nodes.length; i++) {
+            for (let j = i + 1; j < nodes.length; j++) {
+                const a = nodes[i], b = nodes[j];
+                const dx = a.x - b.x, dy = a.y - b.y;
+                const d = Math.hypot(dx, dy);
+                if (d < linkDist) {
+                    ctx.strokeStyle = pal.text;
+                    ctx.globalAlpha = base * 0.55 * (1 - d / linkDist);
+                    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+                }
+            }
+        }
+        // nodes
+        ctx.globalAlpha = base;
+        ctx.fillStyle = pal.text;
+        for (const nd of nodes) {
+            ctx.beginPath(); ctx.arc(nd.x, nd.y, nd.r, 0, Math.PI * 2); ctx.fill();
+        }
+        // spawn a message pulse between two linked nodes
+        if (t - state.lastPulse > 900 + Math.random() * 900) {
+            state.lastPulse = t;
+            for (let tries = 0; tries < 12; tries++) {
+                const a = nodes[Math.floor(Math.random() * nodes.length)];
+                const b = nodes[Math.floor(Math.random() * nodes.length)];
+                if (a !== b && Math.hypot(a.x - b.x, a.y - b.y) < linkDist) {
+                    pulses.push({ a, b, p: 0 });
+                    break;
+                }
+            }
+        }
+        // draw pulses (a message travelling a link, and a small ack ring on arrival)
+        for (let i = pulses.length - 1; i >= 0; i--) {
+            const pu = pulses[i];
+            pu.p += 0.016;
+            const x = pu.a.x + (pu.b.x - pu.a.x) * Math.min(pu.p, 1);
+            const y = pu.a.y + (pu.b.y - pu.a.y) * Math.min(pu.p, 1);
+            if (pu.p < 1) {
+                ctx.globalAlpha = base * 2.2;
+                ctx.fillStyle = pal.accent;
+                ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2); ctx.fill();
+            } else if (pu.p < 1.45) {
+                ctx.globalAlpha = base * 2 * (1 - (pu.p - 1) / 0.45);
+                ctx.strokeStyle = pal.ok;
+                ctx.beginPath(); ctx.arc(pu.b.x, pu.b.y, 3 + (pu.p - 1) * 16, 0, Math.PI * 2); ctx.stroke();
+            } else {
+                pulses.splice(i, 1);
+            }
+        }
+        ctx.globalAlpha = 1;
+    }
+
+    /* ---- preset: rain (formal-methods glyph rain — the default) ----
+       Each column is a falling stream: a bright "head" glyph followed
+       by a fading tail. Some streams fall in accent blue, glyphs
+       mutate as they fall, and three depth layers (size/speed/alpha)
+       give the rain parallax. Tuned to stay behind the text. */
+    const GLYPHS = ['□', '◇', '∀', '∃', '⇒', '∧', '∨', "'", '!', '→', '≜', '⊆', '∈', 'λ', '⟨', '⟩', '≡', '¬'];
+    function newDrop(col, colW, scatter) {
+        const depth = Math.random();                       // 0 = far, 1 = near
+        const size = 10 + depth * 6;
+        return {
+            x: col * colW + 6 + Math.random() * (colW - 18),
+            y: scatter ? Math.random() * canvas.height : -Math.random() * canvas.height * 0.6,
+            v: 0.35 + depth * 0.95 + Math.random() * 0.25,
+            size,
+            step: size * 1.45,
+            tail: 6 + Math.floor(depth * 9 + Math.random() * 4),
+            depth,
+            accent: Math.random() < 0.15,
+            mut: Math.floor(Math.random() * 97),
+            wait: scatter ? 0 : Math.random() * 400        // staggered starts
+        };
+    }
+    function initRain() {
+        const colW = 54;
+        const cols = Math.ceil(canvas.width / colW);
+        state = { colW, drops: Array.from({ length: cols }, (_, i) => newDrop(i, colW, true)) };
+    }
+    function drawRain() {
+        const baseHead = pal.light ? 0.30 : 0.42;
+        const baseTail = pal.light ? 0.16 : 0.22;
+        const { drops, colW } = state;
+        for (let i = 0; i < drops.length; i++) {
+            const d = drops[i];
+            if (d.wait > 0) { d.wait--; continue; }
+            d.y += d.v;
+            if (Math.random() < 0.03) d.mut++;             // glyphs flicker as they fall
+            ctx.font = d.size + 'px monospace';
+            for (let k = 0; k < d.tail; k++) {
+                const gy = d.y - k * d.step;
+                if (gy < -24 || gy > canvas.height + 24) continue;
+                const cell = Math.floor(gy / d.step);
+                const g = GLYPHS[Math.abs(cell * 7 + i * 13 + d.mut) % GLYPHS.length];
+                if (k === 0) {                             // bright head
+                    ctx.globalAlpha = baseHead * (0.55 + d.depth * 0.45);
+                    ctx.fillStyle = d.accent ? pal.accent : pal.bright;
+                } else {                                   // fading tail
+                    const fade = 1 - k / d.tail;
+                    ctx.globalAlpha = baseTail * fade * fade * (0.45 + d.depth * 0.55);
+                    ctx.fillStyle = d.accent && k < 3 ? pal.accent : pal.text;
+                }
+                ctx.fillText(g, d.x, gy);
+            }
+            if (d.y - d.tail * d.step > canvas.height + 24) {
+                drops[i] = newDrop(i, colW, false);
+            }
+        }
+        ctx.globalAlpha = 1;
+    }
+
+    /* ---- preset: life (Conway, slow and faint) ---- */
+    function initLife() {
+        const cell = 16;
+        const w = Math.ceil(canvas.width / cell), h = Math.ceil(canvas.height / cell);
+        state = {
+            cell, w, h, last: 0,
+            grid: Array.from({ length: w * h }, () => Math.random() < 0.10 ? 1 : 0)
+        };
+    }
+    function stepLife() {
+        const { w, h, grid } = state;
+        const next = new Array(w * h);
+        let alive = 0;
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                let n = 0;
+                for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+                    if (!dx && !dy) continue;
+                    n += grid[((y + dy + h) % h) * w + ((x + dx + w) % w)];
+                }
+                const cur = grid[y * w + x];
+                next[y * w + x] = (cur && (n === 2 || n === 3)) || (!cur && n === 3) ? 1 : 0;
+                alive += next[y * w + x];
+            }
+        }
+        state.grid = alive < state.w * state.h * 0.01
+            ? Array.from({ length: w * h }, () => Math.random() < 0.10 ? 1 : 0)
+            : next;
+    }
+    function drawLife(t) {
+        if (t - state.last > 420) { state.last = t; stepLife(); }
+        const { cell, w, h, grid } = state;
+        ctx.globalAlpha = pal.light ? 0.07 : 0.09;
+        ctx.fillStyle = pal.text;
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+            if (grid[y * w + x]) ctx.fillRect(x * cell + 2, y * cell + 2, cell - 4, cell - 4);
+        }
+        ctx.globalAlpha = 1;
+    }
+
+    /* ---- engine ---- */
+    function init() {
+        if (mode === 'nodes') initNodes();
+        else if (mode === 'rain') initRain();
+        else if (mode === 'life') initLife();
+    }
+    function frame(t) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (mode === 'nodes') drawNodes(t);
+        else if (mode === 'rain') drawRain(t);
+        else if (mode === 'life') drawLife(t);
+        raf = requestAnimationFrame(frame);
+    }
+    function startLoop() { stopLoop(); raf = requestAnimationFrame(frame); }
+    function stopLoop() { if (raf) cancelAnimationFrame(raf); raf = null; }
+
+    function set(m) {
+        mode = m;
+        try { localStorage.setItem('bg-v2', m); } catch (e) {}
+        stopLoop();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (m !== 'off') { palette(); init(); startLoop(); }
+    }
+    function boot() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        if (reducedMotion()) { mode = 'off'; return; }
+        let saved = null;
+        try { saved = localStorage.getItem('bg-v2'); } catch (e) {}
+        set(saved && (MODES.includes(saved) || saved === 'off') ? saved : 'rain');
+    }
+    return { set, boot, refresh: palette, MODES, current: () => mode };
+})();
+
+/* ---------- theme ---------- */
+function applyTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    $('themeIcon').textContent = t === 'light' ? 'theme --dark' : 'theme --light';
+    try { localStorage.setItem('theme', t); } catch (e) {}
+    if (typeof BG !== 'undefined') BG.refresh();
+}
+function toggleTheme() {
+    const cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    applyTheme(cur === 'light' ? 'dark' : 'light');
+}
+(function initTheme() {
+    let saved = null;
+    try { saved = localStorage.getItem('theme'); } catch (e) {}
+    if (!saved) saved = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    applyTheme(saved);
+})();
+
+/* ---------- intro: typed whoami + name (the v1 effect) ---------- */
+function typeInto(el, text, speed, done) {
+    if (reducedMotion()) { el.textContent = text; if (done) done(); return; }
+    let i = 0;
+    const cur = document.createElement('span');
+    cur.className = 'cursor';
+    el.appendChild(cur);
+    (function tick() {
+        if (i < text.length) {
+            cur.insertAdjacentText('beforebegin', text[i++]);
+            setTimeout(tick, speed);
+        } else {
+            setTimeout(() => { cur.remove(); if (done) done(); }, 450);
+        }
+    })();
+}
+function intro() {
+    typeInto($('firstCmd'), 'cat summary.md', 45, () =>
+        typeInto($('nameEl'), 'Vladyslav Mikytiv', 45, () =>
+            typeInto($('taglineEl'), 'software verification · distributed systems · erlang & tla+', 18)));
+}
+
+/* ============================================================
+   LIVE PROMPT — the signature of this variant.
+   ============================================================ */
+const COMMANDS = ['help', 'ls', 'cd', 'cat', 'open', 'vim', 'nvim', 'whoami', 'neofetch', 'bg', 'theme', 'clear', 'date', 'echo', 'pwd', 'history'];
+function completionPool(cmdName) {
+    if (cmdName === 'cd') return ['~', '..', 'home', 'projects/', 'blog/', 'publications/'];
+    if (cwd === '~/publications') return ['..'];           // entries aren't openable files
+    const items = dirContents(cwd);
+    return cwd === '~' ? items : items.concat(['..', '~']);
+}
+function logLine(html, cls) {
+    const div = document.createElement('div');
+    if (cls) div.className = cls;
+    div.innerHTML = html;
+    $('cmdlog').appendChild(div);
+    $('cmdlog').scrollTop = $('cmdlog').scrollHeight;
+}
+function echoCmd(cmd) {
+    logLine('<span class="echo"><span class="u">vlad@bug</span><span class="p">:' + esc(cwd) + '$</span> ' + esc(cmd) + '</span>');
+}
+function runCommand(raw) {
+    const cmd = raw.trim();
+    if (!cmd) return;
+    echoCmd(cmd);
+    const [name, ...args] = cmd.split(/\s+/);
+    const arg = (args[0] || '').replace(/\/$/, '').replace(/\.md$/, '');
+
+    switch (name) {
+        case '/':
+            logLine("'/' is a keyboard shortcut, not a command — press the <b>/</b> key while reading the page (outside this input) and focus jumps here.");
+            break;
+        case 'help':
+            logLine('commands: <b>ls</b> [dir], <b>cd</b> [~|..|projects|blog|publications], <b>cat</b>|<b>open</b> &lt;file&gt;, <b>pwd</b>, <b>bg</b> [rain|nodes|life|off], <b>whoami</b>, <b>neofetch</b>, <b>theme</b>, <b>date</b>, <b>history</b>, <b>clear</b>');
+            break;
+        case 'bg': {
+            if (!arg || arg === 'list') {
+                logLine('background: <b>' + BG.current() + '</b> — options: rain (glyph rain, default) · nodes (distributed system) · life (conway) · off');
+            } else if (arg === 'off' || arg === 'stop' || arg === 'none') {
+                BG.set('off');
+                logLine('background stopped');
+            } else if (BG.MODES.includes(arg)) {
+                if (reducedMotion()) { logLine('bg: disabled — your system prefers reduced motion', 'err'); break; }
+                BG.set(arg);
+                logLine('background set to <b>' + arg + '</b>');
+            } else {
+                logLine('bg: unknown preset: ' + esc(arg) + ' — try nodes, rain, life, off', 'err');
+            }
+            break;
+        }
+        case 'ls': {
+            const target = resolveDir(args[0]);
+            if (target === null) {
+                logLine("ls: cannot access '" + esc(args[0]) + "': no such file or directory", 'err');
+            } else {
+                logLine(dirContents(target).map(x =>
+                    /\/$/.test(x) ? '<span style="color:var(--accent)">' + esc(x) + '</span>' : esc(x)
+                ).join('&nbsp;&nbsp;'));
+            }
+            break;
+        }
+        case 'cd': {
+            const target = resolveDir(args[0]);
+            if (target === null) {
+                logLine('cd: no such directory: ' + esc(args[0]), 'err');
+            } else {
+                setCwd(target);
+                location.hash = hashForDir(target);
+            }
+            break;
+        }
+        case 'open':
+        case 'cat':
+        case 'vim':
+        case 'nvim': {
+            if (!args[0]) { logLine(name + ': missing file operand', 'err'); break; }
+            const f = resolveFile(args[0]);
+            if (!f) logLine(name + ': no such file: ' + esc(args[0]), 'err');
+            else if (f.kind === 'project') location.hash = '#/projects/' + f.obj.id;
+            else if (f.kind === 'post') location.hash = '#/blog/' + f.obj.slug;
+            else if (f.kind === 'home') location.hash = '#/';
+            else if (f.kind === 'contact') {
+                const lines = [...document.querySelectorAll('#page-home .contact-list li')]
+                    .map(li => esc(li.textContent.trim().replace(/\s+/g, ' ')));
+                logLine(lines.join('<br>') || 'contact: see the home page');
+            }
+            break;
+        }
+        case 'whoami':
+            logLine('Vladyslav Mikytiv — software verification &amp; distributed systems');
+            break;
+        case 'neofetch':
+            logLine(
+`<pre><span class="nf-a">      ▲      </span><span class="nf-k">vlad</span>@<span class="nf-k">sea</span>
+<span class="nf-a">     ▲ ▲     </span>─────────────
+<span class="nf-a">    ▲ ▲ ▲    </span><span class="nf-k">role:</span> researcher — formal verification
+<span class="nf-a">   ▲▲▲▲▲▲▲   </span><span class="nf-k">langs:</span> erlang · tla+ · ocaml · rust · go
+<span class="nf-a">             </span><span class="nf-k">editor:</span> nvim &nbsp;<span class="nf-k">shell:</span> zsh
+<span class="nf-a">             </span><span class="nf-k">motto:</span> if it isn't specified, it's broken</pre>`);
+            break;
+        case 'date':
+            logLine(new Date().toString());
+            break;
+        case 'pwd':
+            logLine('/home/vlad' + (cwd === '~' ? '' : cwd.slice(1)));
+            break;
+        case 'echo':
+            logLine(esc(args.join(' ')));
+            break;
+        case 'history':
+            logLine(cmdHistory.slice(0, 10).map((c, i) => (i + 1) + '&nbsp; ' + esc(c)).reverse().join('<br>') || '(empty)');
+            break;
+        case 'theme':
+            toggleTheme();
+            break;
+        case 'clear':
+            $('cmdlog').innerHTML = '';
+            break;
+        case 'sudo':
+            logLine('vlad is not in the sudoers file. This incident will be reported.', 'err');
+            break;
+        case 'exit':
+            logLine('there is no escape. try <b>help</b>');
+            break;
+        default:
+            logLine('zsh: command not found: ' + esc(name) + ' — try <b>help</b>', 'err');
+    }
+}
+
+/* history + tab completion */
+const cmdHistory = [];
+let histIdx = -1;
+$('cmdInput').addEventListener('keydown', e => {
+    const input = e.target;
+    if (e.key === 'Enter') {
+        const v = input.value;
+        if (v.trim()) { cmdHistory.unshift(v.trim()); histIdx = -1; }
+        runCommand(v);
+        input.value = '';
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (histIdx < cmdHistory.length - 1) { histIdx++; input.value = cmdHistory[histIdx]; }
+    } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (histIdx > 0) { histIdx--; input.value = cmdHistory[histIdx]; }
+        else { histIdx = -1; input.value = ''; }
+    } else if (e.key === 'Tab') {
+        e.preventDefault();
+        const v = input.value;
+        const parts = v.split(/\s+/);
+        const isFirst = parts.length <= 1 && !v.endsWith(' ');
+        const frag = v.endsWith(' ') ? '' : parts[parts.length - 1];
+        const pool = isFirst ? COMMANDS
+                   : parts[0] === 'bg' ? ['nodes', 'rain', 'life', 'off']
+                   : completionPool(parts[0]);
+        const matches = pool.filter(x => x.startsWith(frag));
+        if (matches.length === 1) {
+            parts[v.endsWith(' ') ? parts.length : parts.length - 1] = matches[0];
+            input.value = parts.join(' ') + (isFirst ? ' ' : '');
+        } else if (matches.length > 1) {
+            logLine(matches.slice(0, 12).map(esc).join('&nbsp;&nbsp;'));
+        }
+    } else if (e.key === 'Escape') {
+        input.blur();
+    }
+});
+/* '/' focuses the prompt from anywhere */
+document.addEventListener('keydown', e => {
+    if (e.key === '/' && document.activeElement !== $('cmdInput') &&
+        !/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) {
+        e.preventDefault();
+        $('cmdInput').focus();
+    }
+});
+
+/* ---------- email obfuscation ----------
+   The address never appears in the HTML source. It is displayed
+   as "user [at] domain [dot] tld" and the real mailto: link is
+   assembled only at the moment of the click. */
+document.querySelectorAll('.email-link').forEach(a => {
+    const user = a.dataset.user, domain = a.dataset.domain;
+    a.textContent = user + ' [at] ' + domain.split('.').join(' [dot] ');
+    a.setAttribute('href', '#');
+    a.setAttribute('title', 'click to write an email');
+    a.addEventListener('click', e => {
+        e.preventDefault();
+        location.href = 'mailto:' + user + '@' + domain;
+    });
+});
+
+/* ---------- portrait sizing ----------
+   Matches the photo frame's height to the text column so their
+   bottoms align, capped at 300px. Runs at boot, after fonts
+   load, and on resize. */
+function sizePortrait() {
+    const box = document.querySelector('.portrait-box');
+    const info = document.querySelector('.id-info');
+    if (!box || !info || window.innerWidth <= 600) { if (box) box.style.height = ''; return; }
+    box.style.height = Math.min(info.offsetHeight, 300) + 'px';
+}
+window.addEventListener('resize', sizePortrait);
+window.addEventListener('load', sizePortrait);
+
+/* ---------- boot ---------- */
+renderProjects();
+renderExperience();
+renderPublications();
+renderBlog();
+route();
+BG.boot();
+sizePortrait();
+intro();
+</script>
+</body>
+</html>
